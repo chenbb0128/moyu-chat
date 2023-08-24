@@ -1,0 +1,11 @@
+{
+    "prettier.enable": false,
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "workbench.colorCustomizations": {
+      "terminal.background": "#000",
+      "terminal.foreground": "#808080"
+    }
+  }
