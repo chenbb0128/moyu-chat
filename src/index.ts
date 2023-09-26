@@ -30,7 +30,7 @@ bot
   .then(() => log.info('开始运行...'))
   .catch(e => log.error('StarterBot', e))
 
-app.get('/sendContactMsg', async (req, res) => {
+app.get('/0', async (req, res) => {
   if (req.query.name || req.query.alias) {
     if (req.query.content) {
       const content = string2utf8(req.query.content?.toString())
@@ -48,7 +48,7 @@ app.get('/sendContactMsg', async (req, res) => {
   }
 })
 
-app.get('/sendRoomMsg', async (req, res) => {
+app.get('/1', async (req, res) => {
   if (req.query.name) {
     if (req.query.content) {
       const content = string2utf8(req.query.content?.toString())
