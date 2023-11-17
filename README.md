@@ -1,4 +1,4 @@
-# cli-wechat
+# moyu-chat
 
 - 命令行运行微信聊天
 - 基于[Wechaty](http://github.com/wechaty/wechaty)开源项目开发。
