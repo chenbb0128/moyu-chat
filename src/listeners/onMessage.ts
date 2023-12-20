@@ -1,6 +1,12 @@
+import { PassThrough } from 'node:stream'
+import { createReadStream, createWriteStream, unlink } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 import { log } from 'wechaty'
+import Ffmpeg from 'fluent-ffmpeg'
 import type { Message, Room } from 'wechaty'
 import { robotConfig } from '../configs/robot.ts'
+import { asr } from '../utils/asr.ts'
 
 const startTime = new Date()
 export async function onMessage(msg: Message) {
@@ -109,7 +115,39 @@ async function dispatchFriendAudioMsg(msg: Message) {
   const alias = await contact.alias()
 
   const name = alias ? `${contact.name()}(${alias})` : contact.name()
-  log.info(`好友【${name}】 发送了文件`)
+  const msgFile = await msg.toFileBox()
+  const filename = msgFile.name
+  await msgFile.toFile(filename)
+  const mp3Stream = createReadStream(filename)
+  const wavStream = new PassThrough()
+
+  Ffmpeg(mp3Stream)
+    .fromFormat('mp3')
+    .toFormat('wav')
+    .pipe(wavStream as any)
+    .on('error', (err: Error /* , stdout, stderr */) => {
+      log.error(`Cannot process video: ${err.message}`)
+    })
+
+  // 将二进制流写入文件
+  const filePath = `${filename.split('.')[0]}.wav`
+  const fileWriteStream = createWriteStream(filePath)
+
+  wavStream.pipe(fileWriteStream)
+
+  fileWriteStream.on('finish', async () => {
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    // 获取当前文件所在目录的绝对路径
+    const currentPath = path.resolve(__dirname)
+    // 返回上两级文件夹的路径
+    const oldPath = path.join(currentPath, `../../${filename}`)
+    const newPath = path.join(currentPath, `../../${filePath}`)
+    const text = await asr(newPath)
+    log.info(`好友【${name}】 发送了语音：${text}`)
+    unlink(newPath, () => { })
+    unlink(oldPath, () => { })
+  })
 }
 
 async function dispatchRoomVideoMsg(msg: Message, room: Room) {
